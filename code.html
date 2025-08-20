@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindful MoodSpin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        /* General styling for the body */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #e7e9f1);
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container for the whole app */
+        .app-container {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 2rem;
+            box-sizing: border-box;
+            background-color: #fff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header styling */
+        .header {
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 2.5rem;
+            color: #6366f1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Mood Spinner section */
+        .mood-spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .spinner-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background-color: #e0e7ff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* The spin wheel itself */
+        #spinWheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            position: relative;
+        }
+        
+        /* The pointer that indicates the winning segment */
+        .pointer {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ef4444; /* Red color for the pointer */
+            top: -10px;
+            z-index: 10;
+        }
+
+        /* Button styling */
+        .spin-btn {
+            padding: 0.75rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #fff;
+            background-color: #6366f1;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .spin-btn:hover {
+            background-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .spin-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Results container */
+        .result-container {
+            min-height: 50px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        /* Feature sections styling */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background-color: #f1f5f9;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .feature-card button {
+            background-color: #4f46e5;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .feature-card button:hover {
+            background-color: #3f35c0;
+        }
+
+        /* Modal styling for features */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        /* Specific modal content styles */
+        .breathing-circle {
+            width: 200px;
+            height: 200px;
+            background-color: #6366f1;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: breathe 6s ease-in-out infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .crossword-grid {
+            display: grid;
+            gap: 1px;
+            background-color: #666;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .crossword-cell {
+            width: 30px;
+            height: 30px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            text-align: center;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        
+        .crossword-cell input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            outline: none;
+        }
+        
+        .crossword-cell.empty {
+            background-color: #444;
+            border: 1px solid #444;
+        }
+
+        /* Floating confetti and emojis for charm */
+        .confetti-container, .emoji-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .confetti, .floating-emoji {
+            position: absolute;
+            opacity: 0;
+            animation: float 5s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-1000px) rotate(360deg); opacity: 0; }
+        }
+
+        .floating-emoji {
+            animation: float-emoji 8s linear infinite;
+            font-size: 2rem;
+        }
+
+        @keyframes float-emoji {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="confetti-container"></div>
+    <div class="emoji-container"></div>
+
+    <div class="app-container">
+        <!-- Main header -->
+        <div class="header">
+            <h1>Mindful MoodSpin</h1>
+            <p class="text-gray-500 mt-2">Spin the wheel to get a mental health activity!</p>
+        </div>
+
+        <!-- Mood spinner section -->
+        <div class="mood-spinner-container">
+            <div class="spinner-wrapper">
+                <canvas id="spinWheel" width="300" height="300"></canvas>
+                <div class="pointer"></div>
+            </div>
+            <button id="spinBtn" class="spin-btn">Spin the Wheel!</button>
+            <div id="result" class="result-container mt-4"></div>
+        </div>
+
+        <!-- Features grid -->
+        <div class="features-grid">
+            <!-- Daily Affirmation Card -->
+            <div class="feature-card">
+                <h3 class="text-center">Daily Affirmation</h3>
+                <p id="affirmationText" class="text-center text-lg font-light italic text-gray-700">
+                    Click the button below to see a positive message.
+                </p>
+                <button id="newAffirmationBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Get New Affirmation
+                </button>
+            </div>
+
+            <!-- Breathing Exercise Card -->
+            <div class="feature-card">
+                <h3 class="text-center">Breathing Exercise</h3>
+                <p class="text-center text-gray-600">
+                    A simple exercise to help you calm down.
+                </p>
+                <button id="breathingBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Start Exercise
+                </button>
+            </div>
+            
+            <!-- Wise Words Card (API-driven) -->
+            <div class="feature-card">
+                <h3 class="text-center">Wise Words</h3>
+                <p id="wiseWordsText" class="text-center text-lg font-light italic text-gray-700 min-h-[5rem] flex items-center justify-center">
+                    Get some wisdom and inspiration.
+                </p>
+                <button id="wiseWordsBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Get Wise Words
+                </button>
+            </div>
+
+            <!-- Mood Journal Card -->
+            <div class="feature-card">
+                <h3 class="text-center">Mood Journal</h3>
+                <p class="text-center text-gray-600">
+                    Write down your thoughts and feelings.
+                </p>
+                <button id="journalBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Open Journal
+                </button>
+            </div>
+
+            <!-- Crossword Puzzle Card -->
+            <div class="feature-card">
+                <h3 class="text-center">Crossword Puzzle</h3>
+                <p class="text-center text-gray-600">
+                    Give your mind a fun challenge.
+                </p>
+                <button id="crosswordBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Play Crossword
+                </button>
+            </div>
+            
+            <!-- Guess the Number Game Card -->
+            <div class="feature-card">
+                <h3 class="text-center">Guess the Number</h3>
+                <p class="text-center text-gray-600">
+                    A simple game to relax your mind.
+                </p>
+                <button id="guessGameBtn" class="bg-indigo-500 text-white font-semibold py-2 rounded-xl hover:bg-indigo-600 transition-colors">
+                    Play Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for features -->
+
+    <!-- Breathing Modal -->
+    <div id="breathingModal" class="modal">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Breathing Exercise</h2>
+            <p id="breathingInstruction" class="text-xl font-medium text-gray-600 mb-6">Breathe In...</p>
+            <div class="breathing-circle"></div>
+            <button class="bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg mt-6" onclick="closeModal('breathingModal')">Close</button>
+        </div>
+    </div>
+    
+    <!-- Journal Modal -->
+    <div id="journalModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4 text-center">Mood Journal</h2>
+            <textarea id="journalEntry" class="w-full h-48 p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" placeholder="What's on your mind?"></textarea>
+            <div class="flex justify-end mt-4 gap-2">
+                <button class="bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors" onclick="closeModal('journalModal')">Close</button>
+                <button id="saveJournalBtn" class="bg-green-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">Save</button>
+                <button id="downloadJournalBtn" class="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">Download</button>
+            </div>
+            <p id="journalMessage" class="text-sm mt-2 text-green-600 hidden">Entry saved!</p>
+        </div>
+    </div>
+
+    <!-- Crossword Modal -->
+    <div id="crosswordModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4 text-center">Mental Health Crossword</h2>
+            <div id="crossword-container" class="flex flex-col items-center">
+                <div id="puzzle-selection" class="mb-4">
+                    <label for="puzzleSelect" class="font-semibold text-gray-700">Select Puzzle:</label>
+                    <select id="puzzleSelect" class="ml-2 p-2 rounded-md border border-gray-300">
+                        <option value="0">Puzzle 1</option>
+                        <option value="1">Puzzle 2</option>
+                    </select>
+                </div>
+                <div id="grid-container" class="crossword-grid"></div>
+                <div id="clues-container" class="mt-6 text-gray-700 text-center">
+                    <h3 class="text-xl font-semibold text-indigo-600">Clues</h3>
+                    <ul id="clues-list" class="list-disc list-inside mt-2 text-left"></ul>
+                </div>
+            </div>
+            <button class="bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg mt-6" onclick="closeModal('crosswordModal')">Close</button>
+        </div>
+    </div>
+    
+    <!-- Guess the Number Modal -->
+    <div id="guessGameModal" class="modal">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Guess the Number</h2>
+            <p class="text-xl font-medium text-gray-600 mb-4">I'm thinking of a number between 1 and 100.</p>
+            <input type="number" id="guessInput" class="w-24 text-center p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="?">
+            <button id="submitGuessBtn" class="bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg mt-4 block mx-auto">Guess</button>
+            <p id="guessResult" class="text-lg mt-4 font-semibold"></p>
+            <p id="guessCount" class="text-sm mt-2 text-gray-500"></p>
+            <button class="bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg mt-6" onclick="closeModal('guessGameModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- General Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content text-center">
+            <p id="messageText" class="text-xl font-semibold mb-4"></p>
+            <button class="bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg" onclick="closeModal('messageModal')">OK</button>
+        </div>
+    </div>
+    
+    <script>
+        // --- Confetti & Floating Emojis for "Charm" ---
+        const confettiContainer = document.querySelector('.confetti-container');
+        const emojiContainer = document.querySelector('.emoji-container');
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
+        const emojis = ['😊', '🧘‍♀️', '💭', '💖', '🌈', '🌟', '✨', '🧠'];
+
+        function createConfetti(force = false) {
+            if (!force && Math.random() > 0.3) return;
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti absolute';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.width = `${Math.random() * 8 + 4}px`;
+            confetti.style.height = `${Math.random() * 8 + 4}px`;
+            confetti.style.left = `${Math.random() * 100}%`;
+            confetti.style.top = `${Math.random() * 100}%`;
+            confetti.style.borderRadius = '50%';
+            confetti.style.opacity = '0.7';
+
+            confettiContainer.appendChild(confetti);
+            const animationDuration = Math.random() * 3 + 2;
+            confetti.style.animation = `float ${animationDuration}s linear forwards`;
+            setTimeout(() => { confetti.remove(); }, animationDuration * 1000);
+        }
+
+        function createFloatingEmoji(force = false) {
+            if (!force && Math.random() > 0.7) return;
+            const emoji = document.createElement('div');
+            emoji.className = 'floating-emoji absolute';
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = `${Math.random() * 100}%`;
+            emoji.style.top = `${Math.random() * 100 + 10}vh`; // Start from below the screen
+            emojiContainer.appendChild(emoji);
+
+            const animationDuration = Math.random() * 6 + 5;
+            emoji.style.animation = `float-emoji ${animationDuration}s linear forwards`;
+            setTimeout(() => { emoji.remove(); }, animationDuration * 1000);
+        }
+
+        setInterval(() => createConfetti(), 300);
+        setInterval(() => createFloatingEmoji(), 1500);
+
+        // --- Spin Wheel Logic ---
+        const spinWheel = document.getElementById('spinWheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+        const ctx = spinWheel.getContext('2d');
+        const moods = [
+            { text: "Breathing Exercise", color: "#A8DADC" },
+            { text: "Mood Journal", color: "#F7CAC9" },
+            { text: "Wise Words", color: "#BDE0FE" },
+            { text: "Daily Affirmation", color: "#C5E3A4" },
+            { text: "Crossword Puzzle", color: "#D1C4E9" },
+            { text: "Guess the Number", color: "#B3E5FC" },
+            { text: "Mindful Coloring", color: "#FDE68A" },
+            { text: "Gratitude List", color: "#FFDAB9" }
+        ];
+
+        let isSpinning = false;
+        const totalMoods = moods.length;
+        const arcSize = (2 * Math.PI) / totalMoods;
+
+        function drawWheel() {
+            let startAngle = 0;
+            for (let i = 0; i < totalMoods; i++) {
+                const mood = moods[i];
+                const endAngle = startAngle + arcSize;
+
+                // Draw the segment
+                ctx.beginPath();
+                ctx.moveTo(150, 150);
+                ctx.arc(150, 150, 150, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = mood.color;
+                ctx.fill();
+
+                // Draw dividing lines
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Draw text horizontally at the center of each segment
+                ctx.save();
+                ctx.translate(150, 150); // Move to center of canvas
+                ctx.rotate(startAngle + arcSize / 2); // Rotate to the middle of the segment
+                ctx.rotate(-spinWheel.style.transform.match(/\d+/) * Math.PI / 180 || 0); // Correct for wheel rotation
+                
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#333';
+                
+                const maxTextWidth = 100;
+                let fontSize = 16;
+                let textFits = false;
+                let textLines;
+
+                while (!textFits && fontSize > 8) {
+                    ctx.font = `${fontSize}px Poppins`;
+                    textLines = [];
+                    const words = mood.text.split(' ');
+                    let currentLine = '';
+
+                    for (const word of words) {
+                        const testLine = currentLine + (currentLine.length > 0 ? ' ' : '') + word;
+                        const metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxTextWidth && currentLine.length > 0) {
+                            textLines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            currentLine = testLine;
+                        }
+                    }
+                    textLines.push(currentLine);
+
+                    if ((textLines.length * fontSize) < 130) {
+                        textFits = true;
+                    } else {
+                        fontSize--;
+                    }
+                }
+                
+                const lineHeight = fontSize + 4;
+                const textY = -75 - (textLines.length - 1) * lineHeight / 2;
+                
+                textLines.forEach((line, index) => {
+                    ctx.fillText(line, 0, textY + index * lineHeight);
+                });
+
+                ctx.restore();
+                
+                startAngle = endAngle;
+            }
+        }
+        
+        // Spin function
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            resultDiv.textContent = '';
+            
+            const spinDegrees = Math.floor(Math.random() * 360) + 3600;
+            spinWheel.style.transform = `rotate(${spinDegrees}deg)`;
+            createConfetti(true);
+
+            setTimeout(() => {
+                isSpinning = false;
+                const finalRotation = spinDegrees % 360;
+                const winningIndex = Math.floor(totalMoods - (finalRotation / 360) * totalMoods);
+                const winningMood = moods[winningIndex === totalMoods ? 0 : winningIndex];
+                resultDiv.textContent = `You got: ${winningMood.text}!`;
+
+                switch(winningMood.text) {
+                    case "Breathing Exercise":
+                        openModal('breathingModal');
+                        startBreathingAnimation();
+                        break;
+                    case "Mood Journal":
+                        openModal('journalModal');
+                        loadJournalEntry();
+                        break;
+                    case "Wise Words":
+                        showWiseWords();
+                        break;
+                    case "Daily Affirmation":
+                        showNewAffirmation();
+                        break;
+                    case "Crossword Puzzle":
+                        openModal('crosswordModal');
+                        createCrosswordGrid(0);
+                        break;
+                    case "Guess the Number":
+                        openModal('guessGameModal');
+                        startGame();
+                        break;
+                    case "Mindful Coloring":
+                        showMessage("This feature is coming soon!");
+                        break;
+                    case "Gratitude List":
+                        showMessage("This feature is coming soon!");
+                        break;
+                }
+            }, 5000);
+        });
+
+        // Initial draw and redraw on spin to keep text horizontal
+        let animationFrameId;
+
+        function animate() {
+            drawWheel();
+            if (isSpinning) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                cancelAnimationFrame(animationFrameId);
+                // Draw one last time to ensure final state is correct
+                drawWheel();
+            }
+        }
+        
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            resultDiv.textContent = '';
+            const spinDegrees = Math.floor(Math.random() * 360) + 3600;
+            spinWheel.style.transform = `rotate(${spinDegrees}deg)`;
+            createConfetti(true);
+            animate(); // Start the animation loop
+
+            setTimeout(() => {
+                isSpinning = false;
+                const finalRotation = spinDegrees % 360;
+                const winningIndex = Math.floor(totalMoods - (finalRotation / 360) * totalMoods);
+                const winningMood = moods[winningIndex === totalMoods ? 0 : winningIndex];
+                resultDiv.textContent = `You got: ${winningMood.text}!`;
+                
+                switch(winningMood.text) {
+                    case "Breathing Exercise":
+                        openModal('breathingModal');
+                        startBreathingAnimation();
+                        break;
+                    case "Mood Journal":
+                        openModal('journalModal');
+                        loadJournalEntry();
+                        break;
+                    case "Wise Words":
+                        showWiseWords();
+                        break;
+                    case "Daily Affirmation":
+                        showNewAffirmation();
+                        break;
+                    case "Crossword Puzzle":
+                        openModal('crosswordModal');
+                        createCrosswordGrid(0);
+                        break;
+                    case "Guess the Number":
+                        openModal('guessGameModal');
+                        startGame();
+                        break;
+                    case "Mindful Coloring":
+                        showMessage("This feature is coming soon!");
+                        break;
+                    case "Gratitude List":
+                        showMessage("This feature is coming soon!");
+                        break;
+                }
+                
+            }, 5000);
+        });
+
+        // --- Modals and Features Logic ---
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('active');
+            if (modalId === 'breathingModal') {
+                document.querySelector('.breathing-circle').style.animationPlayState = 'paused';
+            }
+        }
+        
+        function showMessage(message) {
+            const messageModal = document.getElementById('messageModal');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = message;
+            openModal('messageModal');
+        }
+
+        // --- Breathing Exercise ---
+        const breathingBtn = document.getElementById('breathingBtn');
+        const breathingInstruction = document.getElementById('breathingInstruction');
+        
+        breathingBtn.addEventListener('click', () => {
+            openModal('breathingModal');
+            startBreathingAnimation();
+        });
+
+        function startBreathingAnimation() {
+            const circle = document.querySelector('.breathing-circle');
+            circle.style.animationPlayState = 'running';
+            let cycle = 0;
+            const instructions = ["Breathe In...", "Hold...", "Breathe Out...", "Hold..."];
+            
+            const instructionInterval = setInterval(() => {
+                breathingInstruction.textContent = instructions[cycle];
+                cycle = (cycle + 1) % instructions.length;
+            }, 1500);
+
+            setTimeout(() => {
+                clearInterval(instructionInterval);
+            }, 60000);
+        }
+
+        // --- Mood Journal ---
+        const journalBtn = document.getElementById('journalBtn');
+        const saveJournalBtn = document.getElementById('saveJournalBtn');
+        const downloadJournalBtn = document.getElementById('downloadJournalBtn');
+        const journalEntry = document.getElementById('journalEntry');
+        const journalMessage = document.getElementById('journalMessage');
+        
+        journalBtn.addEventListener('click', () => {
+            openModal('journalModal');
+            loadJournalEntry();
+        });
+        
+        saveJournalBtn.addEventListener('click', () => {
+            localStorage.setItem('moodJournalEntry', journalEntry.value);
+            journalMessage.textContent = 'Entry saved!';
+            journalMessage.classList.remove('hidden');
+            setTimeout(() => journalMessage.classList.add('hidden'), 3000);
+        });
+
+        downloadJournalBtn.addEventListener('click', () => {
+            const content = journalEntry.value;
+            const filename = 'Mindful_Journal_Entry.txt';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        function loadJournalEntry() {
+            journalEntry.value = localStorage.getItem('moodJournalEntry') || '';
+        }
+
+        // --- Daily Affirmation ---
+        const newAffirmationBtn = document.getElementById('newAffirmationBtn');
+        const affirmationText = document.getElementById('affirmationText');
+        const affirmations = [
+            "I am capable of amazing things.",
+            "My potential is limitless.",
+            "I choose to be positive today.",
+            "I am strong and resilient.",
+            "I am enough, just as I am.",
+            "Today is a new opportunity.",
+            "I trust my intuition.",
+            "Every day is a fresh start."
+        ];
+
+        newAffirmationBtn.addEventListener('click', showNewAffirmation);
+        
+        function showNewAffirmation() {
+            const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
+            affirmationText.textContent = randomAffirmation;
+        }
+        
+        // --- Wise Words (API-driven) ---
+        const wiseWordsBtn = document.getElementById('wiseWordsBtn');
+        const wiseWordsText = document.getElementById('wiseWordsText');
+        
+        wiseWordsBtn.addEventListener('click', showWiseWords);
+        
+        async function showWiseWords() {
+            wiseWordsText.textContent = 'Generating wisdom...';
+            const prompt = "Give me a single, short, inspiring or wise quote or piece of advice related to mental health, happiness, or personal growth. Do not include the author.";
+            let retries = 0;
+            const maxRetries = 3;
+            const delay = 1000;
+            
+            async function callApi() {
+                try {
+                    const chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        wiseWordsText.textContent = text;
+                    } else {
+                        throw new Error("Invalid API response format");
+                    }
+                } catch (error) {
+                    console.error('Error fetching wise words:', error);
+                    if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(callApi, delay * Math.pow(2, retries));
+                    } else {
+                        wiseWordsText.textContent = "Could not fetch wise words. Please try again later.";
+                    }
+                }
+            }
+            callApi();
+        }
+
+        // --- Crossword Puzzle Logic ---
+        const crosswordBtn = document.getElementById('crosswordBtn');
+        const puzzleSelect = document.getElementById('puzzleSelect');
+        const gridContainer = document.getElementById('grid-container');
+        const cluesList = document.getElementById('clues-list');
+        
+        crosswordBtn.addEventListener('click', () => {
+            openModal('crosswordModal');
+            createCrosswordGrid(puzzleSelect.value);
+        });
+        
+        puzzleSelect.addEventListener('change', (e) => {
+            createCrosswordGrid(e.target.value);
+        });
+
+        const crosswordPuzzles = [
+            // Puzzle 1
+            [
+                { word: "HAPPY", clue: "Feeling or showing pleasure or contentment.", start: { row: 2, col: 1 }, direction: "across" },
+                { word: "CALM", clue: "Peaceful and tranquil.", start: { row: 2, col: 3 }, direction: "down" },
+                { word: "TRUST", clue: "Firm belief in the reliability of someone or something.", start: { row: 0, col: 3 }, direction: "across" },
+                { word: "PEACE", clue: "Freedom from disturbance.", start: { row: 4, col: 0 }, direction: "across" },
+                { word: "GROW", clue: "To develop or mature.", start: { row: 0, col: 0 }, direction: "down" }
+            ],
+            // Puzzle 2
+            [
+                { word: "HOPE", clue: "A feeling of expectation and desire for a certain thing to happen.", start: { row: 0, col: 0 }, direction: "across" },
+                { word: "JOY", clue: "A feeling of great pleasure and happiness.", start: { row: 0, col: 1 }, direction: "down" },
+                { word: "LOVE", clue: "An intense feeling of deep affection.", start: { row: 2, col: 2 }, direction: "across" },
+                { word: "KIND", clue: "Having or showing a friendly, generous, and considerate nature.", start: { row: 1, col: 4 }, direction: "down" }
+            ]
+        ];
+
+        function createCrosswordGrid(puzzleIndex) {
+            gridContainer.innerHTML = '';
+            cluesList.innerHTML = '';
+            const data = crosswordPuzzles[puzzleIndex];
+            const size = 6;
+            const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+
+            // Populate the grid with words
+            data.forEach(item => {
+                const { word, start, direction } = item;
+                for (let i = 0; i < word.length; i++) {
+                    if (direction === "across") {
+                        if (start.col + i < size) {
+                            grid[start.row][start.col + i] = word[i];
+                        }
+                    } else {
+                        if (start.row + i < size) {
+                            grid[start.row + i][start.col] = word[i];
+                        }
+                    }
+                }
+            });
+
+            // Render the grid
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'crossword-cell';
+                    if (grid[r][c] === '') {
+                        cell.classList.add('empty');
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.dataset.row = r;
+                        input.dataset.col = c;
+                        cell.appendChild(input);
+                    }
+                    gridContainer.appendChild(cell);
+                }
+            }
+            gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            
+            // Render the clues
+            data.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.direction.charAt(0).toUpperCase()}: ${item.clue}`;
+                cluesList.appendChild(li);
+            });
+            
+            // Add event listener to check answers
+            gridContainer.removeEventListener('input', checkCrossword);
+            gridContainer.addEventListener('input', checkCrossword);
+        }
+        
+        function checkCrossword() {
+            let solved = true;
+            const puzzleIndex = puzzleSelect.value;
+            const data = crosswordPuzzles[puzzleIndex];
+            
+            data.forEach(item => {
+                const { word, start, direction } = item;
+                for (let i = 0; i < word.length; i++) {
+                    let inputChar = '';
+                    if (direction === "across") {
+                        const cell = document.querySelector(`[data-row="${start.row}"][data-col="${start.col + i}"]`);
+                        if(cell) inputChar = cell.value.toUpperCase();
+                    } else {
+                        const cell = document.querySelector(`[data-row="${start.row + i}"][data-col="${start.col}"]`);
+                        if(cell) inputChar = cell.value.toUpperCase();
+                    }
+                    if (inputChar !== word[i]) {
+                        solved = false;
+                    }
+                }
+            });
+            if (solved) {
+                showMessage("Congratulations! You've solved the puzzle!");
+                closeModal('crosswordModal');
+            }
+        }
+        
+        // --- Guess the Number Game ---
+        const guessGameBtn = document.getElementById('guessGameBtn');
+        const guessInput = document.getElementById('guessInput');
+        const submitGuessBtn = document.getElementById('submitGuessBtn');
+        const guessResult = document.getElementById('guessResult');
+        const guessCountDisplay = document.getElementById('guessCount');
+        let secretNumber;
+        let guessCount;
+        
+        guessGameBtn.addEventListener('click', () => {
+            openModal('guessGameModal');
+            startGame();
+        });
+        
+        function startGame() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            guessCount = 0;
+            guessResult.textContent = '';
+            guessCountDisplay.textContent = `Guesses: 0`;
+            guessInput.value = '';
+        }
+        
+        submitGuessBtn.addEventListener('click', () => {
+            const userGuess = parseInt(guessInput.value, 10);
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                guessResult.textContent = "Please enter a valid number between 1 and 100.";
+                guessResult.style.color = '#ef4444';
+                return;
+            }
+            
+            guessCount++;
+            guessCountDisplay.textContent = `Guesses: ${guessCount}`;
+            
+            if (userGuess === secretNumber) {
+                guessResult.textContent = `You got it in ${guessCount} guesses!`;
+                guessResult.style.color = '#22c55e';
+                showMessage(`Congratulations! You guessed the number in ${guessCount} tries!`);
+            } else if (userGuess < secretNumber) {
+                guessResult.textContent = "Too low. Try a higher number.";
+                guessResult.style.color = '#f97316';
+            } else {
+                guessResult.textContent = "Too high. Try a lower number.";
+                guessResult.style.color = '#f97316';
+            }
+            guessInput.value = '';
+            guessInput.focus();
+        });
+
+        // --- Onload logic ---
+        window.onload = function() {
+            drawWheel();
+            showNewAffirmation();
+        }
+    </script>
+</body>
+</html>
